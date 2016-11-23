@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<project name="wordform" default="build" basedir=".">
+
+    <!-- **************************************************************** -->
+    <!-- Properties                                                       -->
+    <!-- **************************************************************** -->
+
+    <property name="project.dir" value="${project::get-base-directory()}/" />
+    <property name="project.name" value="${project::get-name()}f>" />
+	
+    <property name="overall.project.dir" value="${project.dir}/../../Work"/>
+
+    <property name="thirdparty.project.dir" value="D:\Work\tcp-we-thirdparty"/>
+
+    <loadtasks assembly="${thirdparty.project.dir}/NantContrib/0.92/bin/NAnt.Contrib.Tasks.dll"/>
+
+    <!-- **************************************************************** -->
+    <!-- Public tasks                                                     -->
+    <!-- **************************************************************** -->
+
+    <!-- Clean up the project component(s) -->
+    <target name="clean">
+        <call target="__clean-components" />
+    </target>
+
+    <!-- Build the project component(s) -->
+    <target name="build">
+        <call target="__build-components" />
+    </target>
+
+    <!-- Test the project component(s) -->
+    <target name="test">
+        <call target="__execute-test-nunit"/>
+    </target>
+
+    <!-- Only set this if not already set -->
+    <if test="${not property::exists('cygwin.home.dir')}">
+        <property name="cygwin.home.dir" value="D:/Tools/cygwin"/>
+    </if>
+    <if test="${not property::exists('msbuild.configuration')}">
+        <property name="msbuild.configuration" value="Debug" />
+    </if>
+    <if test="${not property::exists('msbuild.platform')}">
+        <property name="msbuild.platform" value="Any CPU" />
+    </if>
+    <if test="${not property::exists('msbuild.verbose')}">
+        <property name="msbuild.verbose" value="false" />
+    </if>
+    <if test="${not property::exists('msbuild.verbosity')}">
+        <property name="msbuild.verbosity" value="quiet" />
+    </if>
+
+    <!-- **************************************************************** -->
+    <!-- Private filesets (useful for sharing fileset definitions)        -->
+    <!-- NOTE: fileset contents are determined each time they're included -->
+    <!-- **************************************************************** -->
+
+    <fileset id="wordform-build.fileset" basedir=".">
+        <include name="wordform.sln" />
+    </fileset>
+
+    <!-- *********************************************** -->
+    <!-- Private tasks (useful for individual execution) -->
+    <!-- *********************************************** -->
+
+    <target name="__msbuildversion">
+        <exec program="MSBuild.exe" verbose="${msbuild.verbose}">
+            <arg value="/version" />
+        </exec>
+    </target>
+
+    <target name="__build-components">
+        <foreach item="File" property="buildfile">
+            <in>
+                <items refid="wordform-build.fileset" />
+            </in>
+            <do>
+                <property name="buildfile.dir" value="${path::get-directory-name(buildfile)}" />
+                <property name="buildfile.name" value="${path::get-file-name(buildfile)}" />
+                <echo />
+                <echo message="Auto-building ${buildfile}..." />
+                <echo />
+                <exec workingdir="${buildfile.dir}" program="MSBuild.exe" verbose="${msbuild.verbose}">
+                    <arg value="${buildfile.name}" />
+                    <arg value="/t:Build" />
+                    <arg value="/p:Configuration=${msbuild.configuration}" />
+                    <arg value="/p:Platform=${msbuild.platform}" />
+                    <arg value='/p:PostBuildEvent=""' />
+                    <arg value="/v:${msbuild.verbosity}" />
+                </exec>
+            </do>
+        </foreach>
+    </target>
+
+    <target name="__clean-components">
+        <foreach item="File" property="buildfile">
+            <in>
+                <items refid="wordform-build.fileset" />
+            </in>
+            <do>
+                <property name="buildfile.dir" value="${path::get-directory-name(buildfile)}" />
+                <property name="buildfile.name" value="${path::get-file-name(buildfile)}" />
+                <echo />
+                <echo message="Auto-cleaning ${buildfile}..." />
+                <echo />
+                <exec workingdir="${buildfile.dir}" program="MSBuild.exe" verbose="${msbuild.verbose}">
+                    <arg value="${buildfile.name}" />
+                    <arg value="/t:Clean" />
+                    <arg value="/p:Configuration=${msbuild.configuration}" />
+                    <arg value="/p:Platform=${msbuild.platform}" />
+                    <arg value="/v:${msbuild.verbosity}" />
+                </exec>
+            </do>
+        </foreach>
+    </target>
+
+
+</project>
